@@ -11,13 +11,13 @@ import {
   BookOpen,
   GraduationCap,
 } from "lucide-react";
-import API from "../utils/api"; // ✅ Updated import
+import API from "../utils/api"; // ✅ Use API instance
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false); 
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,8 +31,7 @@ const Login = () => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
 
     if (token && user && location.pathname === "/login") {
-      if (user.role === "admin") navigate("/admin/dashboard", { replace: true });
-      else navigate("/student/dashboard", { replace: true });
+      navigate(user.role === "admin" ? "/admin/dashboard" : "/student/dashboard", { replace: true });
     }
 
     const savedEmail = localStorage.getItem("rememberedEmail");
@@ -51,7 +50,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Admin login first step
+      // Admin login
       const res = await API.post("/auth/admin/login", { email, password });
       if (res.data.success) {
         setOtpSent(true);
@@ -60,23 +59,18 @@ const Login = () => {
         return;
       }
     } catch (adminErr) {
-      // Try student login if admin fails
+      // Student login
       try {
         const studentRes = await API.post("/auth/student/login", { email, password });
         if (studentRes.data.success) {
           localStorage.setItem("token", studentRes.data.token);
           localStorage.setItem("user", JSON.stringify(studentRes.data.user));
-
-          if (rememberMe) localStorage.setItem("rememberedEmail", email);
-          else localStorage.removeItem("rememberedEmail");
-
+          rememberMe ? localStorage.setItem("rememberedEmail", email) : localStorage.removeItem("rememberedEmail");
           navigate("/student/dashboard");
           return;
         }
       } catch (studentErr) {
-        setError(
-          studentErr.response?.data?.msg || "Invalid email or password. Please try again."
-        );
+        setError(studentErr.response?.data?.msg || "Invalid email or password.");
       }
     } finally {
       setIsLoading(false);
@@ -88,17 +82,14 @@ const Login = () => {
   // =========================
   const handleOtpVerify = async () => {
     if (!otp) return setError("Please enter OTP");
-
     setIsLoading(true);
+
     try {
       const res = await API.post("/auth/admin/verify-otp", { email, otp });
       if (res.data.success) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        if (rememberMe) localStorage.setItem("rememberedEmail", email);
-        else localStorage.removeItem("rememberedEmail");
-
+        rememberMe ? localStorage.setItem("rememberedEmail", email) : localStorage.removeItem("rememberedEmail");
         navigate("/admin/dashboard");
       }
     } catch (err) {
@@ -108,6 +99,9 @@ const Login = () => {
     }
   };
 
+  // =========================
+  // Demo Login
+  // =========================
   const handleDemoLogin = (role) => {
     if (role === "admin") {
       setEmail("admin@snaplearn.com");
@@ -172,6 +166,7 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleLogin} className="login-form">
+            {/* Email */}
             <div className="input-group">
               <label>Email Address</label>
               <div className="input-wrapper">
@@ -187,7 +182,8 @@ const Login = () => {
               </div>
             </div>
 
-            {!otpSent && (
+            {/* Password / OTP */}
+            {!otpSent ? (
               <div className="input-group">
                 <label>Password</label>
                 <div className="input-wrapper">
@@ -210,9 +206,7 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-            )}
-
-            {otpSent && (
+            ) : (
               <div className="input-group">
                 <label>Enter OTP</label>
                 <input
@@ -225,6 +219,7 @@ const Login = () => {
               </div>
             )}
 
+            {/* Options */}
             <div className="login-options">
               <label className="remember-me">
                 <input
@@ -242,12 +237,12 @@ const Login = () => {
 
             {error && <div className="error-message">{error}</div>}
 
+            {/* Submit Button */}
             {!otpSent ? (
               <button type="submit" className="login-button" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader className="spinner" size={18} />
-                    Signing in...
+                    <Loader className="spinner" size={18} /> Signing in...
                   </>
                 ) : (
                   "Sign In"
@@ -262,8 +257,7 @@ const Login = () => {
               >
                 {isLoading ? (
                   <>
-                    <Loader className="spinner" size={18} />
-                    Verifying OTP...
+                    <Loader className="spinner" size={18} /> Verifying OTP...
                   </>
                 ) : (
                   "Verify OTP"
@@ -272,6 +266,7 @@ const Login = () => {
             )}
           </form>
 
+          {/* Demo Login */}
           <div className="demo-section">
             <p className="demo-label">Quick demo access:</p>
             <div className="demo-buttons">
@@ -281,8 +276,7 @@ const Login = () => {
                 onClick={() => handleDemoLogin("admin")}
                 disabled={isLoading}
               >
-                <User size={16} />
-                Admin Demo
+                <User size={16} /> Admin Demo
               </button>
               <button
                 type="button"
@@ -290,8 +284,7 @@ const Login = () => {
                 onClick={() => handleDemoLogin("student")}
                 disabled={isLoading}
               >
-                <GraduationCap size={16} />
-                Student Demo
+                <GraduationCap size={16} /> Student Demo
               </button>
             </div>
           </div>

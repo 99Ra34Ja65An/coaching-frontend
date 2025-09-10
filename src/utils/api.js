@@ -1,12 +1,13 @@
+// src/utils/api.js
 import axios from "axios";
 
-// ✅ Axios instance with environment variable
+// ✅ Axios instance create with environment variable
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://192.168.0.121:5000/api",
+  baseURL: process.env.REACT_APP_API_URL || "https://coaching-frontend1.onrender.com/api",
   timeout: 10000,
 });
 
-// ✅ Attach token automatically
+// ✅ Automatically attach token for every request
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -18,7 +19,7 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Handle 401 globally
+// ✅ Handle token expiration globally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
