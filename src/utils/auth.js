@@ -1,29 +1,52 @@
-import axios from "axios";
-
-// ✅ Backend ka base URL set karo
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://coaching-backend-venu.onrender.com/api",
-});
-
-// ✅ Request Interceptor — har API call se pehle token lagana
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// ✅ Set or remove auth token manually (optional)
-export const setAuthToken = (token) => {
-  if (token) {
-    API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete API.defaults.headers.common["Authorization"];
-  }
+// ✅ Get stored token from localStorage
+export const getStoredToken = () => {
+  return localStorage.getItem("token");
 };
 
-export default API;
+// ✅ Save token to localStorage
+export const saveToken = (token) => {
+  localStorage.setItem("token", token);
+};
+
+// ✅ Remove token from localStorage
+export const removeToken = () => {
+  localStorage.removeItem("token");
+};
+
+// ✅ Get current logged-in user from localStorage
+export const getStoredUser = () => {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
+};
+
+// ✅ Save user info to localStorage
+export const saveUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+};
+
+// ✅ Remove user info from localStorage
+export const removeUser = () => {
+  localStorage.removeItem("user");
+};
+
+// ✅ Clear full session (token + user)
+export const clearSession = () => {
+  removeToken();
+  removeUser();
+};
+
+// ✅ Check if JWT token is expired or not
+export const isTokenExpired = (token) => {
+  try {
+    // JWT ka payload decode karna
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    // Expiration time (seconds → ms)
+    const expiry = payload.exp * 1000;
+
+    return Date.now() >= expiry;
+  } catch (err) {
+    // Agar token invalid hai → expired treat karo
+    return true;
+  }
+};

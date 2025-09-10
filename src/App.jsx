@@ -9,15 +9,19 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { getStoredToken, getStoredUser, isTokenExpired } from "./utils/auth";
 
 const App = () => {
-  // ✅ Default route decide karega based on user role
+  // ✅ Default route decide karega based on user role & token status
   const getDefaultRoute = () => {
     const token = getStoredToken();
     const user = getStoredUser();
 
+    // ✅ Agar token & user dono valid hai → direct dashboard open karo
     if (token && user && !isTokenExpired(token)) {
-      if (user.role === "admin") return "/admin/dashboard";
-      if (user.role === "student") return "/student/dashboard";
+      return user.role === "admin"
+        ? "/admin/dashboard"
+        : "/student/dashboard";
     }
+
+    // ✅ Otherwise → login page open karo
     return "/login";
   };
 
@@ -28,11 +32,11 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* ✅ Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<StudentSignup />} />
 
-        {/* Protected Admin Dashboard */}
+        {/* ✅ Protected Admin Dashboard */}
         <Route
           path="/admin/dashboard"
           element={
@@ -42,7 +46,7 @@ const App = () => {
           }
         />
 
-        {/* Protected Student Dashboard */}
+        {/* ✅ Protected Student Dashboard */}
         <Route
           path="/student/dashboard"
           element={
@@ -52,10 +56,10 @@ const App = () => {
           }
         />
 
-        {/* Default Redirect */}
+        {/* ✅ Root Path → Auto Redirect */}
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
-        {/* Catch-All Redirect */}
+        {/* ✅ Catch-All → Auto Redirect */}
         <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
       </Routes>
     </Router>
