@@ -12,7 +12,10 @@ import {
   GraduationCap,
 } from "lucide-react";
 
-const API_URL = process.env.REACT_APP_API_URL;
+// ✅ API URL from .env or fallback
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  "https://coaching-backend-venu.onrender.com/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -27,11 +30,11 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ Auto-login if token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
 
-    // Auto redirect if already logged in
     if (token && user && location.pathname === "/login") {
       if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
@@ -40,7 +43,7 @@ const Login = () => {
       }
     }
 
-    // Restore remembered email
+    // ✅ Restore remembered email
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
       setEmail(savedEmail);
@@ -48,14 +51,14 @@ const Login = () => {
     }
   }, [navigate, location]);
 
-  // Handle Login (Admin first, then Student fallback)
+  // ✅ Handle Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      // Try Admin Login
+      // 🔹 Try Admin Login First
       const res = await axios.post(`${API_URL}/auth/admin/login`, {
         email,
         password,
@@ -68,7 +71,7 @@ const Login = () => {
         return;
       }
     } catch (adminErr) {
-      // If admin login fails, try Student Login
+      // 🔹 If admin login fails, try Student Login
       try {
         const studentRes = await axios.post(`${API_URL}/auth/student/login`, {
           email,
@@ -79,6 +82,7 @@ const Login = () => {
           localStorage.setItem("token", studentRes.data.token);
           localStorage.setItem("user", JSON.stringify(studentRes.data.user));
 
+          // ✅ Save email if "Remember Me" is checked
           if (rememberMe) {
             localStorage.setItem("rememberedEmail", email);
           } else {
@@ -99,7 +103,7 @@ const Login = () => {
     }
   };
 
-  // Handle OTP Verification for Admin
+  // ✅ Handle OTP Verification for Admin
   const handleOtpVerify = async () => {
     if (!otp) return setError("Please enter OTP");
     setIsLoading(true);
@@ -129,6 +133,7 @@ const Login = () => {
     }
   };
 
+  // ✅ Demo Login Fillers
   const handleDemoLogin = (role) => {
     if (role === "admin") {
       setEmail("admin@snaplearn.com");
@@ -222,6 +227,7 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleLogin} className="login-form">
+            {/* Email */}
             <div className="input-group">
               <label>Email Address</label>
               <div className="input-wrapper">
@@ -237,6 +243,7 @@ const Login = () => {
               </div>
             </div>
 
+            {/* Password */}
             {!otpSent && (
               <div className="input-group">
                 <label>Password</label>
@@ -262,6 +269,7 @@ const Login = () => {
               </div>
             )}
 
+            {/* OTP */}
             {otpSent && (
               <div className="input-group">
                 <label>Enter OTP</label>
@@ -275,6 +283,7 @@ const Login = () => {
               </div>
             )}
 
+            {/* Remember Me */}
             <div className="login-options">
               <label className="remember-me">
                 <input
@@ -290,8 +299,10 @@ const Login = () => {
               </Link>
             </div>
 
+            {/* Error */}
             {error && <div className="error-message">{error}</div>}
 
+            {/* Submit Buttons */}
             {!otpSent ? (
               <button type="submit" className="login-button" disabled={isLoading}>
                 {isLoading ? (
@@ -322,6 +333,7 @@ const Login = () => {
             )}
           </form>
 
+          {/* Demo Buttons */}
           <div className="demo-section">
             <p className="demo-label">Quick demo access:</p>
             <div className="demo-buttons">
@@ -346,6 +358,7 @@ const Login = () => {
             </div>
           </div>
 
+          {/* Signup Link */}
           <div className="signup-link">
             <p>
               Don't have an account?{" "}
