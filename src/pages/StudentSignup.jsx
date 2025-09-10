@@ -36,7 +36,7 @@ const StudentSignup = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post("http://192.168.0.121:5000/api/auth/student/register", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/student/register`, {
         name: formData.name,
         email: formData.email,
         password: formData.password,
