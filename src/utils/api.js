@@ -1,13 +1,12 @@
-// admin/src/API.js
 import axios from "axios";
 
-// ✅ Axios instance create
+// ✅ Axios instance with environment variable
 const API = axios.create({
-  baseURL: "http://192.168.0.121:5000/api", // Apne backend ka URL
-  timeout: 10000, // 10 sec timeout, network issues handle karne ke liye
+  baseURL: process.env.REACT_APP_API_URL || "http://192.168.0.121:5000/api",
+  timeout: 10000,
 });
 
-// ✅ Automatically attach token for every request
+// ✅ Attach token automatically
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -19,17 +18,15 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Handle token expiration & unauthorized access globally
+// ✅ Handle 401 globally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid → Auto logout
       localStorage.removeItem("token");
-      localStorage.removeItem("student");
-
+      localStorage.removeItem("user");
       alert("Session expired! Please login again.");
-      window.location.href = "/login"; // redirect to login page
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
