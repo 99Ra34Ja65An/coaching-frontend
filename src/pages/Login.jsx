@@ -12,11 +12,13 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false); // OTP step active
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +31,7 @@ const Login = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
 
+    // Auto redirect if already logged in
     if (token && user && location.pathname === "/login") {
       if (user.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
@@ -37,6 +40,7 @@ const Login = () => {
       }
     }
 
+    // Restore remembered email
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
       setEmail(savedEmail);
@@ -44,17 +48,15 @@ const Login = () => {
     }
   }, [navigate, location]);
 
-  // =========================
-  // Handle Login (Admin + Student)
-  // =========================
+  // Handle Login (Admin first, then Student fallback)
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      // Admin login first step: email + password
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/admin/login`, {
+      // Try Admin Login
+      const res = await axios.post(`${API_URL}/auth/admin/login`, {
         email,
         password,
       });
@@ -66,26 +68,30 @@ const Login = () => {
         return;
       }
     } catch (adminErr) {
-      // Admin failed → try student login
+      // If admin login fails, try Student Login
       try {
-        const studentRes = await axios.post(
-          `${process.env.REACT_APP_API_URL}/auth/student/login`,
-          { email, password }
-        );
+        const studentRes = await axios.post(`${API_URL}/auth/student/login`, {
+          email,
+          password,
+        });
 
         if (studentRes.data.success) {
           localStorage.setItem("token", studentRes.data.token);
           localStorage.setItem("user", JSON.stringify(studentRes.data.user));
 
-          if (rememberMe) localStorage.setItem("rememberedEmail", email);
-          else localStorage.removeItem("rememberedEmail");
+          if (rememberMe) {
+            localStorage.setItem("rememberedEmail", email);
+          } else {
+            localStorage.removeItem("rememberedEmail");
+          }
 
           navigate("/student/dashboard");
           return;
         }
       } catch (studentErr) {
         setError(
-          studentErr.response?.data?.msg || "Invalid email or password. Please try again."
+          studentErr.response?.data?.msg ||
+            "Invalid email or password. Please try again."
         );
       }
     } finally {
@@ -93,15 +99,13 @@ const Login = () => {
     }
   };
 
-  // =========================
-  // Handle OTP Verification
-  // =========================
+  // Handle OTP Verification for Admin
   const handleOtpVerify = async () => {
     if (!otp) return setError("Please enter OTP");
-
     setIsLoading(true);
+
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/admin/verify-otp`, {
+      const res = await axios.post(`${API_URL}/auth/admin/verify-otp`, {
         email,
         otp,
       });
@@ -110,8 +114,11 @@ const Login = () => {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        if (rememberMe) localStorage.setItem("rememberedEmail", email);
-        else localStorage.removeItem("rememberedEmail");
+        if (rememberMe) {
+          localStorage.setItem("rememberedEmail", email);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
 
         navigate("/admin/dashboard");
       }
@@ -208,37 +215,7 @@ const Login = () => {
           <div className="login-header">
             <div className="logo">
               <BookOpen size={38} />
-              <h1>IBS CLASSES</h1>import axios from "axios";
-
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api",
-  timeout: 10000,
-});
-
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-API.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      alert("Session expired! Please login again.");
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default API;
-
+              <h1>IBS CLASSES</h1>
             </div>
             <h2>Welcome Back 👋</h2>
             <p>Please sign in to continue</p>
@@ -343,7 +320,6 @@ export default API;
                 )}
               </button>
             )}
-            
           </form>
 
           <div className="demo-section">
