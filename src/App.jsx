@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
-import StudentSignup from "./pages/StudentSignup"; // ✅ Added StudentSignup page
+import StudentSignup from "./pages/StudentSignup";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
-  // ✅ Helper function to determine default route based on role
+  // ✅ Helper function to decide default route based on login + role
   const getDefaultRoute = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -29,9 +29,9 @@ const App = () => {
       <Routes>
         {/* ✅ Public Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<StudentSignup />} /> {/* ✅ Signup route */}
+        <Route path="/signup" element={<StudentSignup />} />
 
-        {/* ✅ Admin Dashboard (Protected) */}
+        {/* ✅ Protected Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -41,7 +41,6 @@ const App = () => {
           }
         />
 
-        {/* ✅ Student Dashboard (Protected) */}
         <Route
           path="/student/dashboard"
           element={
@@ -51,10 +50,10 @@ const App = () => {
           }
         />
 
-        {/* ✅ Default Redirect */}
+        {/* ✅ Default → Go to dashboard if logged in */}
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
-        {/* ✅ Catch-All: Redirect unknown routes */}
+        {/* ✅ Catch-All: Redirect unknown URLs */}
         <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
       </Routes>
     </Router>
